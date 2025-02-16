@@ -1,0 +1,25 @@
+server:
+  port: 9090
+
+dataservice:
+  url: http://localhost:8090
+
+spring:
+  application:
+    name: mscv-orderService
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3307/orderDB
+    username: root
+    password: entrevista
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQLDialect
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: user
+    password: password
+

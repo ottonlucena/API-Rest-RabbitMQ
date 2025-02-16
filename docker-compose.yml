@@ -1,0 +1,49 @@
+services:
+  #Contenedor para BBDD Data Service
+  mysql-service:
+    image: mysql:8.0
+    container_name: mysql-service
+    environment:
+      MYSQL_ROOT_PASSWORD: entrevista
+      MYSQL_DATABASE: serviceDb
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_service_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  #Contenedor para BBDD Order Service
+  mysql-order:
+    image: mysql:8.0
+    container_name: mysql-order
+    environment:
+      MYSQL_ROOT_PASSWORD: entrevista
+      MYSQL_DATABASE: orderDB
+    ports:
+      - "3307:3306" # Se mapea a un puerto diferente en el host
+    volumes:
+      - mysql_order_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  #Contenedor para RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # Puerto AMQP para el intercambio de mensajes
+      - "15672:15672" # Puerto de la UI de administración de RabbitMQ
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    networks:
+      - app-network
+
+volumes:
+  mysql_service_data:
+  mysql_order_data:
+
+networks:
+  app-network:
+    driver: bridge
