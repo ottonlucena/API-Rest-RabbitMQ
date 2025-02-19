@@ -1,48 +1,71 @@
 package com.application.dataService.SpringBootRest.data.service.Impl;
 
+import com.application.dataService.SpringBootRest.data.dto.ProductDTO;
 import com.application.dataService.SpringBootRest.data.entities.Product;
+import com.application.dataService.SpringBootRest.data.exception.ProductNotFoundException;
+import com.application.dataService.SpringBootRest.data.exception.ProductOutOfStockException;
 import com.application.dataService.SpringBootRest.data.repository.ProductRepository;
 import com.application.dataService.SpringBootRest.data.service.IProductService;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ProductServiceImpl implements IProductService {
 
     private final ProductRepository productRepository;
+    private final ModelMapper modelMapper;
 
     //Injection Dependence through constructor
-    public ProductServiceImpl(ProductRepository productRepository) {
+    public ProductServiceImpl(ProductRepository productRepository, ModelMapper modelMapper) {
         this.productRepository = productRepository;
+        this.modelMapper = modelMapper;
     }
 
     @Override
-    public List<Product> findAllProducts() {
-        return productRepository.findAll();
+    public List<ProductDTO> findAllProducts() {
+        return productRepository.findAll()
+                .stream()
+                .map(product -> modelMapper.map(product, ProductDTO.class))
+                .toList();
     }
 
     @Override
-    public Optional<Product> findByIdProduct(Long id) {
-        return productRepository.findById(id);
-    }
-
-    @Override
-    public Product createProduct(Product product) {
-        return productRepository.save(product);
-    }
-
-    @Override
-    public Product updateProduct(Long id, Product product) {
+    public ProductDTO findByIdProduct(Long id) {
         return productRepository.findById(id)
-                .map(existing ->{
-                    existing.setName(product.getName());
-                    existing.setPrice(product.getPrice());
-                    existing.setStock(product.getStock());
-                    return productRepository.save(existing);
-                })
-                .orElseThrow(()-> new RuntimeException("Product not found"));
+                .map(product -> modelMapper.map(product, ProductDTO.class))
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+    }
+
+    @Override
+    public ProductDTO createProduct(ProductDTO productDTO) {
+        //Convertir DTO a entiendad
+        Product product = modelMapper.map(productDTO, Product.class);
+        Product savedProduct = productRepository.save(product);
+        //Convertir nuevamente entidad guardada a DTO
+        return modelMapper.map(savedProduct, ProductDTO.class);
+    }
+
+    @Override
+    public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+
+        if (productDTO.getName() != null){
+        product.setName(productDTO.getName());
+        }
+
+        if (productDTO.getPrice() != null){
+            product.setPrice(productDTO.getPrice());
+        }
+
+        if (productDTO.getStock() != null){
+            product.setStock(productDTO.getStock());
+        }
+
+        Product updateProduct = productRepository.save(product);
+        return modelMapper.map(updateProduct, ProductDTO.class);
     }
 
     @Override
@@ -51,16 +74,18 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public Product updateStock(Long id, int quantity) {
-        return  productRepository.findById(id)
-                .map(existing -> {
-                    int newStock = existing.getStock() - quantity;
-                    if (newStock < 0){
-                        throw new RuntimeException("Insufficient stock for product with ID: " + id);
-                    }
-                    existing.setStock(newStock);
-                    return productRepository.save(existing);
-                })
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+    public ProductDTO updateStock(Long id, int quantity) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
+
+        if (product.getStock() < quantity) {
+            throw new ProductOutOfStockException(
+                    String.format("Product %s has insufficient stock. Required: %d, Available: %d",
+                            product.getName(), quantity, product.getStock())
+            );
+        }
+
+        product.setStock(product.getStock() - quantity);
+        return modelMapper.map(productRepository.save(product), ProductDTO.class);
     }
 }

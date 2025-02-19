@@ -10,10 +10,16 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     public static final String STOCK_QUEUE = "stockQueue";
+    public static final String STOCK_CONFIRMATION_QUEUE = "stockConfirmationQueue";
 
     @Bean
     public Queue stockQueue(){
         return new Queue(STOCK_QUEUE, true);
+    }
+
+    @Bean
+    public Queue stockConfirmationQueue(){
+        return new Queue(STOCK_CONFIRMATION_QUEUE, true);
     }
 
     @Bean

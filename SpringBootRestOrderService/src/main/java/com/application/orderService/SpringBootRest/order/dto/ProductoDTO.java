@@ -1,4 +1,4 @@
-package com.application.orderService.SpringBootRest.order.config.messaging;
+package com.application.orderService.SpringBootRest.order.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

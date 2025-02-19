@@ -1,7 +1,7 @@
 package com.application.dataService.SpringBootRest.data.controllers;
 
-import com.application.dataService.SpringBootRest.data.entities.Product;
-import com.application.dataService.SpringBootRest.data.service.Impl.ProductServiceImpl;
+import com.application.dataService.SpringBootRest.data.dto.ProductDTO;
+import com.application.dataService.SpringBootRest.data.service.IProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,57 +13,46 @@ import java.util.List;
 @RequestMapping("/api/products")
 public class ProductController {
 
-    private final ProductServiceImpl productService;
+    private final IProductService productService;
 
-    public ProductController(ProductServiceImpl productService) {
+    public ProductController(IProductService productService) {
         this.productService = productService;
     }
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts(){
-        List<Product> productList = productService.findAllProducts();
-        return ResponseEntity.ok(productList);
+    public ResponseEntity<List<ProductDTO>> getAllProducts() {
+        return ResponseEntity.ok(productService.findAllProducts());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id){
-        return productService.findByIdProduct(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
+        ProductDTO product = productService.findByIdProduct(id);
+        return ResponseEntity.ok(product);
     }
 
     @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestBody @Valid Product product){
-        Product createProduct = productService.createProduct(product);
-        return new ResponseEntity<>(createProduct, HttpStatus.CREATED);
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<ProductDTO> createProduct(@RequestBody @Valid ProductDTO productDTO) {
+        return new ResponseEntity<>(productService.createProduct(productDTO), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product){
-        try {
-            Product updated = productService.updateProduct(id, product);
-            return ResponseEntity.ok(updated);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id,@Valid @RequestBody ProductDTO productDTO) {
+        return ResponseEntity.ok(productService.updateProduct(id,productDTO));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteProductById(@PathVariable Long id){
+    public ResponseEntity<?> deleteProductById(@PathVariable Long id) {
+        //Verifico si el producto existe
+        productService.findByIdProduct(id);
         productService.deleteByIdProduct(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/stock")
-    public ResponseEntity<Product> updateStock(@PathVariable Long id, @RequestParam int quantity){
-        try {
-            Product updated = productService.updateStock(id, quantity);
-            return ResponseEntity.ok(updated);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<ProductDTO> updateStock(@PathVariable Long id, @Valid @RequestParam int quantity) {
+        return ResponseEntity.ok(productService.updateStock(id, quantity));
     }
-
 
 
 }

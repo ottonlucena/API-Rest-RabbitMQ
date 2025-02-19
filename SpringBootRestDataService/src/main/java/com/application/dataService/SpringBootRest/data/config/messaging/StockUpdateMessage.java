@@ -15,6 +15,7 @@ public class StockUpdateMessage  implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    private Long orderId;
     private Long productId;
     private Integer quantity;
 

@@ -1,7 +1,7 @@
 package com.application.orderService.SpringBootRest.order.service.Impl;
 
 import com.application.orderService.SpringBootRest.order.config.RabbitMQConfig;
-import com.application.orderService.SpringBootRest.order.config.messaging.ProductoDTO;
+import com.application.orderService.SpringBootRest.order.dto.ProductoDTO;
 import com.application.orderService.SpringBootRest.order.config.messaging.StockUpdateMessage;
 import com.application.orderService.SpringBootRest.order.entities.Order;
 import com.application.orderService.SpringBootRest.order.entities.OrderStatus;
@@ -72,30 +72,24 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        //Verificamos que la orden no este en estado pendiente
+        //Evito procesar ordenes que no esten Pendientes
         if (order.getStatus() != OrderStatus.PENDING){
             throw new IllegalStateException("Order already processed");
         }
 
-        //Consulto el producto
-        String productEndpoint = dataServiceUrl + "/api/products/" + order.getProductId();
-        ProductoDTO productDTO = restTemplate.getForObject(productEndpoint, ProductoDTO.class);
-        if (productDTO == null) {
-            throw new RuntimeException("Product not found");
-        }
-        //Validamos su stock
-        if (order.getQuantity() > productDTO.getStock()) {
-            throw new RuntimeException("Stock insuficiente");
-        }
+        //Marco la orden a processing
+        order.setStatus(OrderStatus.PROCESSING);
+        orderRepository.save(order);
 
         //Enviamos el mensaje de actualización de manera Asíncrona a RabbitMQ para actualizar el stock
         StockUpdateMessage message = StockUpdateMessage.builder()
+                .orderId(order.getId())
                 .productId(order.getProductId())
                 .quantity(order.getQuantity())
                 .build();
         rabbitTemplate.convertAndSend(RabbitMQConfig.STOCK_QUEUE, message);
 
-        order.setStatus(OrderStatus.COMPLETED);
-        return orderRepository.save(order);
+        //Esperamos mediante el mecanismo asingcrono, una confirmacion que acutalice el estado
+        return order;
     }
 }

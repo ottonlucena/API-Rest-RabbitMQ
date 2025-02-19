@@ -1,6 +1,5 @@
 package com.application.orderService.SpringBootRest.order.config.messaging;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,10 +11,10 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class StockUpdateMessage implements Serializable {
+public class StockUpdateConfirmation implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Long orderId;
-    private Long productId;
-    private Integer quantity;
+    private boolean success;
+    private String message;
 }
