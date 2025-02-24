@@ -23,26 +23,30 @@ public class OrderProcessorScheduler {
         this.orderService = orderService;
     }
 
-    //Ejecución cada 5 minutos
+    //Ejecución cada 3 minutos
     @Scheduled(fixedDelay = 120000)
-    public void processPendingOrders(){
+    public void processPendingOrders() {
+        //Buscamos ordenes pednientes
         List<Order> pendingOrders = orderRepository.findByStatus(OrderStatus.PENDING);
-        for (Order order : pendingOrders){
-            try{
-                //Verficamos si la orden sigue pendiente
-                if (order.getStatus() != OrderStatus.PENDING){
-                    logger.info("Order {} ya procesada, se omite.", order.getId());
-                    continue;
-                }
-                //Procesa la orden, validamos stock y enviamos mensaje
-                orderService.processOrder(order.getId());
-                logger.info("Procesada la orden: {}", order.getId());
-            }catch (Exception e){
-                logger.error("Error al procesa la orde {}: {}", order.getId(), e.getMessage());
-            }
+
+        //VErificamos si pending esta vacio y enviarmos un log de advertencia
+        if (pendingOrders.isEmpty()) {
+            logger.info("Orders pending not found");
+            return;
         }
+        //Enviamos un log con las ordenes pedientes antes de procesarlas
+        logger.info("Found {} pending orders", pendingOrders.size());
 
-
+        pendingOrders.forEach(order -> {
+            try {
+                //Procesamos la orden de forma sincronica
+                orderService.processOrder(order.getId());
+                logger.info("Order {} processed successfully", order.getId());
+            } catch (Exception ex) {
+                //Registramos el error
+                logger.error("Error processing order {}: {}", order.getId(), ex.getMessage());
+            }
+        });
 
     }
 

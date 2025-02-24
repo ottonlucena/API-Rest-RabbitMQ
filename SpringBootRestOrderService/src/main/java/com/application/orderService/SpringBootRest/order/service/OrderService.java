@@ -1,17 +1,16 @@
 package com.application.orderService.SpringBootRest.order.service;
 
-import com.application.orderService.SpringBootRest.order.entities.Order;
+import com.application.orderService.SpringBootRest.order.dto.OrderDTO;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface OrderService {
 
-    Order createOrder(Order order);
+    OrderDTO createOrder(OrderDTO order);
 
-    Optional<Order> findByIdOrder(Long id);
+    OrderDTO findByIdOrder(Long id);
 
-    List<Order> findAllOrders();
+    List<OrderDTO> findAllOrders();
 
-    Order processOrder(Long orderId);
+    OrderDTO processOrder(Long orderId);
 }

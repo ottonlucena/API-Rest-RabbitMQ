@@ -17,6 +17,16 @@ public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    //Metodo privado para construir respuesta de errorMessage
+    private ResponseEntity<ErrorMessage> buildErrorResponse(HttpStatus httpStatus, Exception exception){
+        ErrorMessage error = ErrorMessage.builder()
+                .status(httpStatus)
+                .message(exception.getMessage())
+                .dateTime(LocalDateTime.now())
+                .build();
+        return ResponseEntity.status(httpStatus).body(error);
+    }
+
     @ExceptionHandler(ProductNotFoundException.class)
     public ResponseEntity<ErrorMessage> handleProductNotFound(ProductNotFoundException exception){
         logger.error("Product not found exception: ", exception);
@@ -46,16 +56,6 @@ public class GlobalExceptionHandler {
 
         return buildErrorResponse(HttpStatus.BAD_REQUEST,
                 new RuntimeException("Validation error: " + errorMessage));
-    }
-
-    //Metodo privado para construir respuesta de errorMessage
-    private ResponseEntity<ErrorMessage> buildErrorResponse(HttpStatus httpStatus, Exception exception){
-        ErrorMessage error = ErrorMessage.builder()
-                .status(httpStatus)
-                .message(exception.getMessage())
-                .dateTime(LocalDateTime.now())
-                .build();
-        return ResponseEntity.status(httpStatus).body(error);
     }
 
 }

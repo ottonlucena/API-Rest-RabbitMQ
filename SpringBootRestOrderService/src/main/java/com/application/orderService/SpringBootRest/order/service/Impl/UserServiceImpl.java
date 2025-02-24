@@ -1,6 +1,7 @@
 package com.application.orderService.SpringBootRest.order.service.Impl;
 
 import com.application.orderService.SpringBootRest.order.entities.User;
+import com.application.orderService.SpringBootRest.order.exception.UserNotFoundException;
 import com.application.orderService.SpringBootRest.order.repository.UserRepository;
 import com.application.orderService.SpringBootRest.order.service.UserService;
 import org.springframework.stereotype.Service;
@@ -40,12 +41,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updateByIdUser(Long id, User user) {
         return userRepository.findById(id)
-                .map(existing ->{
+                .map(existing -> {
                     existing.setName(user.getName());
                     existing.setEmail(user.getEmail());
                     return userRepository.save(existing);
                 })
-                .orElseThrow(()->new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
     }
 }
