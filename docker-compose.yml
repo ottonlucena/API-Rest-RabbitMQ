@@ -40,6 +40,31 @@ services:
     networks:
       - app-network
 
+  #Contenedor para la aplicación
+  service-data:
+    image: service-data
+    container_name: service-data
+    ports:
+      - "8090:8090"
+    networks:
+      - app-network
+    depends_on:
+      - mysql-service
+      - rabbitmq
+
+  #Contenedor para la aplicación
+  service-order:
+    image: service-order
+    container_name: service-order
+    ports:
+      - "9090:9090"
+    networks:
+      - app-network
+    depends_on:
+      - mysql-order
+      - service-data
+      - rabbitmq
+
 volumes:
   mysql_service_data:
   mysql_order_data:
